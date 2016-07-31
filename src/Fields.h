@@ -1,7 +1,5 @@
-
 #include <string>
 #include <vector>
-
 
 enum FieldType { stringT, longT, floatT, intT };
 
@@ -26,6 +24,12 @@ class Fields {
         void addField(std::string name, FieldType ft) {
             Field* field = new Field{name,ft};
             _fields.push_back(field);
+        }
+
+        std::vector<basic> getLine() {
+            std:vector<basic> rtn;
+            for(basic b : _fields) rtn.push_back<b>;
+            return rtn;
         }
    
     private:

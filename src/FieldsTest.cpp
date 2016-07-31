@@ -2,6 +2,7 @@
 #include <Fields.h>
 #include <Line.h>
 #include <fstream>
+#include <vector>
 
 class FieldsTest : public Test::Suite { 
 
@@ -9,6 +10,25 @@ class FieldsTest : public Test::Suite {
        //infile = std::move(std::ifstream("ebat.csv"));
        //Line line = getNextFields();
        Fields field;
+    }
+
+    void AddField() {
+       Fields field;
+       field.addField("test", FieldType::stringT);
+    }
+
+    void UseFieldsToGetValuesOutOfEbat() {
+       Fields field;
+       field.addField("stockName", FieldType::stringT);
+       field.addField("exchange", FieldType::stringT);
+       field.addField("side", FieldType::stringT);
+       field.addField("condition", FieldType::stringT);
+       field.addField("time", FieldType::longT);
+       field.addField("reptime", FieldType::longT);
+       field.addField("price", FieldType::floatT);
+       field.addField("size", FieldType::intT);
+
+       std::vector<Fields> line = field.getFields();
     }
 
     /* void FieldsReadValues() {

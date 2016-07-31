@@ -55,3 +55,11 @@ Row compression is probably the least interesting form that we should look at
 Block is a special form, I think.   We can make the block size be the entire file... or it can be a fixed number of records.   Either way, it can be a higher level than either of the other methods and should be able to be use in conjunction with the data.
 
 
+
+
+## Design Continued ##
+
+Seems like we should go for the hybrid approach... be able to compress a column, or row, as well as to be able to label field types (like time) and be able to create offsets for that.   That should be easy to implement first.
+
+
+So the design should all the definition of fields based on column types, and to be able to assign a compression type to that data.  Then we can create the header with the field types and the seed values and then populate the compressed data.
