@@ -39,16 +39,20 @@ float _getFloat(std::ifstream& infile) {
 enum FieldType { stringFT, intFT, longFT, floatFT };
 
 class Field {
-    /** Field is an interface that allows each configuration for different field types (columns) from a csv file
-     *  stream -- contructed on a stream to read and reads until the next delimiter
+    /** Field is an interface that allows each configuration for different
+     *  field types (columns) from a csv file stream -- contructed on a
+     *  stream to read and reads until the next delimiter
      */
 
   public:
 
-    std::string& getString();
+    std::string stringValue() {
+        return std::move(_getString(_stream));
+    };
 
     // ctor/dtor/etc
-    Field(std::ifstream& mystream, FieldType ft) : _stream(mystream), _ft(ft) {};
+    Field(std::ifstream& mystream, FieldType ft) :
+        _stream(mystream), _ft(ft) {};
     ~Field() {};
 
   private:
