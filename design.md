@@ -1,0 +1,47 @@
+
+# Design #
+
+The problem calls for creating an algorithm that will enable modification.   We are not supposed to use existing algorithms or programs.   This leads me to believe that it's the process of thinking through the problem that is at the core of this exercise.   We should look through the data and determine characteristics of the data and apply these ideas to our code and see if things work or not.   TDD could be used to drive these ideas into a better solution.  My guy reaction is to think of a modular design, analyze the data, make some inferences of from the statistical characteristics and then write some tests and code.
+
+
+## Modular Design ##
+
+Based on the feedback from assignment 1, it pays to be modular.   We can take the code that we wrote for assignment 1 to read the csv file as well as do some of the StocksProcessor and StockAverager code and modify it for this purpose.   That will save some time and we already know that it processes different fields in the file.   We should modularize this design to be able to construct the row for different types of data... maybe, we are getting a little ahead of ourselves... lets go to the next subject and interate through all the pieces before we design the entire thing before anything else...
+
+## Exploration ##
+
+Should be things out there that we can learn from.  What are the best compression 'ideas'?   Most things point to the use of stuff like Huffman so we aren't going to look at those.  But what are the things that we can learn?   Knowing what I know about compression, there are several things that we should consider.   We can 'slice' the data several ways:  row, column, block.   The assignment says it needs to run on LARGE files but it doesn't limit to loading the file into memory.  If we had a hard constraint about this method then we would put more emphasis into the block concept.   
+
+Compression can take many forms... for example, we can compress this file and still keep it ascii-based, it wont be as compact as binary, but it will be a cleaner format that is still human readable.   We could then take that ascii and push it into a binary format that would get us some better compression stats.
+
+
+
+### Statistics of the Data ##
+
+| ----------- | ----------------------------- |
+| Column Name | Unique values for each column | 
+| ----------- | ----------------------------- |
+| ticker      | 799 |
+| exchange    | 12 |
+| side        | 3 |
+| condition   | 6 |
+| time        | 213548 |
+| reptime     | 259505 |
+| price       | 8993 |
+| size        | 1748 |
+
+#### Questions about the instructions ####
+
+ 1. we have to uncompress the file, but does it have to be in the same order?   Interestingly, we can probably get some better compression stats if we can sort certain things like the times.
+ 1. why are some of the reptimes BEFORE the time values??   Are these errors in the data or is that a characteristic of the system that we need to take into account in the design?
+
+
+## Column ##
+
+Knowing what I know from some specialty databases that I have used, column compression can save LOTS of space for data that has similar structure and form like this data seems to have.  I will probably start by analyzing the contents of this data and look at the statistical characteristics of the data.   Hopefully the sample of data that is presented here is a statistical representation of the real file that will be used.
+
+
+
+## Row ##
+
+Row compression is probably the least interesting form that we should look at
