@@ -1,3 +1,7 @@
+
+#ifndef __LINE_H__
+#define __LINE_H__
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -16,7 +20,7 @@ std::istringstream _getLine(std::ifstream& infile) {
 // getString is a utility function that takes a istringstream and returns the string until the next comma
 std::string _getString(std::istringstream& line) { 
     std::string d;
-    if (!getline( line, d, ',' )) throw std::overflow_error("EOF");
+    if (!getline( line, d, ',' )) throw std::overflow_error("EOL");
     return std::move(d);
 };
 
@@ -65,15 +69,17 @@ class Line {
     // ctor/dtor/etc
     Line(std::ifstream& mystream) :
         _line(_getLine(mystream)) {};
-    ~Line() {};
+    virtual ~Line() {};
     Line(Line&& rhs) noexcept : _line(std::move(rhs._line)) {};
-    Line& operator=(Line other)
-    {
-        _line = std::move(other._line);
-        return *this;
-    }
+    //Line& operator=(Line other)
+    //{
+        //_line = std::move(other._line);
+        //return *this;
+    //}
 
 
   private:
     std::istringstream _line;
 };
+
+#endif // __LINE_H__

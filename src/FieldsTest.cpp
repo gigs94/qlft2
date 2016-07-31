@@ -1,15 +1,18 @@
 #include <cpptest.h>
+#include <Fields.h>
 #include <Line.h>
 #include <fstream>
 
-class LineTest : public Test::Suite { 
+class FieldsTest : public Test::Suite { 
 
-    void ConstructLine() {
-       infile = std::move(std::ifstream("ebat.csv"));
+    void ConstructFields() {
+       //infile = std::move(std::ifstream("ebat.csv"));
+       //Line line = getNextFields();
+       Fields field;
     }
 
-    void LineReadValues() {
-       Line line = getNextLine();
+    /* void FieldsReadValues() {
+       Fields line = getNextFields();
        TEST_ASSERT_EQUALS("USD.JPY",line.stringValue());
        TEST_ASSERT_EQUALS("x",line.stringValue());
        TEST_ASSERT_EQUALS("A",line.stringValue());
@@ -27,9 +30,9 @@ class LineTest : public Test::Suite {
        TEST_ASSERT_EQUALS(0,line.intValue());
     }
 
-    void ReadMultipleLines() {
+    void ReadMultipleFieldss() {
        // ??? so how do we get to the next line now?   we have a throw statement in case we get to the last line in the input file but for the next row can we just continue?   Let's test it and see.
-       Line line = getNextLine();
+       Fields line = getNextFields();
        TEST_ASSERT_EQUALS("USD.JPY",line.stringValue());
        TEST_ASSERT_EQUALS("x",line.stringValue());
        TEST_ASSERT_EQUALS("A",line.stringValue());
@@ -45,20 +48,13 @@ class LineTest : public Test::Suite {
        float expectedValue{97.91};
        TEST_ASSERT_EQUALS(expectedValue,x);
        TEST_ASSERT_EQUALS(10,line.intValue());
-    }
+    } */
 
     public: 
-      LineTest( ) {
-         TEST_ADD(LineTest::ConstructLine);
-         TEST_ADD(LineTest::LineReadValues);
-         TEST_ADD(LineTest::ReadMultipleLines);
+      FieldsTest( ) {
+         TEST_ADD(FieldsTest::ConstructFields);
+         //TEST_ADD(FieldsTest::FieldsReadValues);
+         //TEST_ADD(FieldsTest::ReadMultipleFieldss);
       } 
-
-    private:
-       std::ifstream infile;
-
-       Line getNextLine() {
-           return std::move(Line(infile));
-       }
 
 }; 
