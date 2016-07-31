@@ -30,6 +30,9 @@ Compression can take many forms... for example, we can compress this file and st
 | price       | 8993 |
 | size        | 1748 |
 
+
+ 1. There are type of data here that we can exploit.   meaning, we know the data and it's structured so we can figure out differences in each piece of data and use that to store information instead of trying to find [repetitive] patterns in the data.   For example, can we use the delta-time between the previous entry and the next entry and between the reptime?   If these times are short enough then we can make those smaller ints and use that.   Since we are not trying to uncompress a single row in the middle (and more specifically, there are no performance requirements for that use case), we don't have to worry about having to start at the beginning of the file and walk through everything to recontruct the original data.
+
 #### Questions about the instructions ####
 
  1. we have to uncompress the file, but does it have to be in the same order?   Interestingly, we can probably get some better compression stats if we can sort certain things like the times.
@@ -45,3 +48,10 @@ Knowing what I know from some specialty databases that I have used, column compr
 ## Row ##
 
 Row compression is probably the least interesting form that we should look at
+
+
+## Block ##
+
+Block is a special form, I think.   We can make the block size be the entire file... or it can be a fixed number of records.   Either way, it can be a higher level than either of the other methods and should be able to be use in conjunction with the data.
+
+
