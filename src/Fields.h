@@ -20,7 +20,6 @@ class FieldMetadata {
         FieldType type() { return _ft; };
         std::string& name() { return _name; };
 
-
     private:
         FieldType _ft;
         std::string _name;
@@ -37,11 +36,26 @@ class Field {
         };
 
         Field(FieldMetadata& fmd) : i{0}, _fmd{fmd} {};
-        Field(const Field& f) : i{0}, _fmd{f._fmd} {};
+        Field(const Field& rhs) : _fmd{rhs._fmd} {
+                switch(_fmd.type()) {
+                    case stringT:
+                        s = rhs.s;
+                        break;
+                    case longT:
+                        l = rhs.l;
+                        break;
+                    case floatT:
+                        f = rhs.f;
+                        break;
+                    case intT:
+                        i = rhs.i;
+                        break;
+                }
+        };
         virtual ~Field() { if (_fmd.type() == stringT) s.~string_type();};
 
-        FieldType getType() { return _fmd.type(); };
-        std::string& getName() { return _fmd.name(); };
+        FieldType type() { return _fmd.type(); };
+        std::string& name() { return _fmd.name(); };
         
     private:
         FieldMetadata _fmd;
