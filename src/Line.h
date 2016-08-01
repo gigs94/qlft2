@@ -37,7 +37,6 @@ int _getInteger(std::istringstream& line) {
 // _getFloat is a utility function that takes a istringstream and returns the float until the next comma
 float _getFloat(std::istringstream& line) { 
     float x = std::stof(_getString(line));
-    std::cout << "float: " << x << std::endl;
     return x;
 };
 
@@ -66,20 +65,29 @@ class Line {
         return _getFloat(_line);
     };
 
-    // ctor/dtor/etc
-    Line(std::ifstream& mystream) :
+    void moveToNextLine() {
+        _line = _getLine(_infile);
+        //return std::move(Line(_infile));
+    };
+
+    // ctor/dtor/move
+    Line(std::ifstream& mystream) : 
+        _infile(std::move(mystream)),
         _line(_getLine(mystream)) {};
     virtual ~Line() {};
-    Line(Line&& rhs) noexcept : _line(std::move(rhs._line)) {};
+    Line(Line&& rhs) noexcept : _line(std::move(rhs._line)), _infile(std::move(rhs._infile)) {};
+
     //Line& operator=(Line other)
     //{
         //_line = std::move(other._line);
         //return *this;
     //}
 
-
   private:
     std::istringstream _line;
+    std::ifstream _infile;
 };
 
+
 #endif // __LINE_H__
+

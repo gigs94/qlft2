@@ -7,8 +7,8 @@
 class FieldsTest : public Test::Suite { 
 
     void ConstructFields() {
-       //infile = std::move(std::ifstream("ebat.csv"));
-       //Line line = getNextFields();
+       std::ifstream infile{"ebat.csv"};
+       _line = new Line{infile};
        Fields field;
     }
 
@@ -28,7 +28,7 @@ class FieldsTest : public Test::Suite {
        field.addField("price", FieldType::floatT);
        field.addField("size", FieldType::intT);
 
-       std::vector<Fields> line = field.getFields();
+       std::vector<Field> line = field.getLine(*_line);
     }
 
     /* void FieldsReadValues() {
@@ -73,8 +73,14 @@ class FieldsTest : public Test::Suite {
     public: 
       FieldsTest( ) {
          TEST_ADD(FieldsTest::ConstructFields);
+         TEST_ADD(FieldsTest::UseFieldsToGetValuesOutOfEbat);
          //TEST_ADD(FieldsTest::FieldsReadValues);
          //TEST_ADD(FieldsTest::ReadMultipleFieldss);
       } 
 
+      ~FieldsTest() {
+          delete _line;
+      }
+
+      Line* _line;
 }; 

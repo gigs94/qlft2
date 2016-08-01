@@ -1,19 +1,50 @@
+#ifndef __FIELDS_H__
+#define __FIELDS_H__
+
 #include <string>
 #include <vector>
+#include <Line.h>
+
+using string_type = std::string;
+
 
 enum FieldType { stringT, longT, floatT, intT };
 
-class Field {
+class FieldMetadata {
     public:
-        Field(std::string& name, FieldType ft) : _name(name), _ft(ft) {};
+        FieldMetadata() : _ft(stringT) {};
+        FieldMetadata(std::string& name, FieldType ft) : _name(name), _ft(ft) {};
+        FieldMetadata(FieldMetadata&& rhs) : _name(std::move(rhs._name)), _ft(rhs._ft) {};
+        FieldMetadata(const FieldMetadata& rhs) : _ft(rhs._ft), _name(rhs._name) {};
 
-        FieldType getType() { return _ft; };
-        std::string& getName() { return _name; };
+        FieldType type() { return _ft; };
+        std::string& name() { return _name; };
+
 
     private:
         FieldType _ft;
         std::string _name;
+};
+
+class Field {
+    public:
+        union {
+            int i;
+            double d;
+            long l;
+            float f;
+            std::string s;
+        };
+
+        Field(FieldMetadata& fmd) : i{0}, _fmd{fmd} {};
+        Field(const Field& f) : i{0}, _fmd{f._fmd} {};
+        virtual ~Field() { if (_fmd.type() == stringT) s.~string_type();};
+
+        FieldType getType() { return _fmd.type(); };
+        std::string& getName() { return _fmd.name(); };
         
+    private:
+        FieldMetadata _fmd;
 };
 
 class Fields {
@@ -22,17 +53,38 @@ class Fields {
         Fields() {};
 
         void addField(std::string name, FieldType ft) {
-            Field* field = new Field{name,ft};
+            FieldMetadata field{name,ft};
             _fields.push_back(field);
         }
 
-        std::vector<basic> getLine() {
-            std:vector<basic> rtn;
-            for(basic b : _fields) rtn.push_back<b>;
+        std::vector<Field> getLine(Line& line) {
+            std::vector<Field> rtn;
+
+
+            for(FieldMetadata fmd : _fields) {
+                Field f{fmd};
+                switch(fmd.type()) {
+                    case stringT:
+                        f.s = line.stringValue();
+                        break;
+                    case longT:
+                        f.l = line.longValue();
+                        break;
+                    case floatT:
+                        f.f = line.floatValue();
+                        break;
+                    case intT:
+                        f.i = line.intValue();
+                        break;
+                }
+                rtn.push_back(f);
+            }
             return rtn;
         }
    
     private:
-        std::vector<Field*> _fields;
-
+        std::vector<FieldMetadata> _fields;
+        
 };
+
+#endif // __FIELDS_H__
