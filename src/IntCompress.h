@@ -7,6 +7,10 @@
 #include <istream>
 #include <cstdint>
 
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
+
 class IntCompress {
     /**
      *  IntCompress is a class that takes a vector and creates a list of deltas based on the minimal value (the seed).
@@ -14,10 +18,20 @@ class IntCompress {
      */
     public:
 
-        IntCompress() : _seed{LONG_MAX} {};
-        IntCompress(std::vector<uint64_t> values) : _seed{LONG_MAX} { compress(values); };
+        IntCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
+        IntCompress(std::vector<uint64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
         IntCompress(const IntCompress& tc) {};
         virtual ~IntCompress() {};
+
+        std::vector<uint64_t> decompress() {
+            std::vector<uint64_t> rtn;
+            
+            for (uint64_t d : _deltas) {
+                rtn.push_back(d+_seed);
+            }
+
+            return std::move(rtn);
+        }
 
         void compress(std::vector<uint64_t>& values) {
            // Spin through the values to determine the _seed value
@@ -32,79 +46,21 @@ class IntCompress {
 
         friend std::ostream& operator<<( std::ostream& os, const IntCompress& tc ) {
             // Write header
-            os << tc._seed;
-            os << tc._maxDeltaType;
-            os << tc._deltas.size();
-
-std::cout << "seed = " << tc._seed << std::endl;
-std::cout << "type = " << tc._maxDeltaType << std::endl;
-std::cout << "size = " << tc._deltas.size() << std::endl;
+            os << tc._seed << ":";
+            os << tc._maxDelta << ":";
+            os << tc._maxDeltaType << ":";
+            os << tc._deltas.size() << ":";
 
             // TODO: could look at the number of same sequencial values and store X values of Y.  This
             // TODO: should probably self-optimize considering we don't know what the data looks like.
 
             // write delta vector
             for( uint64_t d : tc._deltas ) {
-                switch (tc._maxDeltaType) {
-                    case eight:
-                        os << (uint8_t)d;
-                    case sixteen:
-                        os << (uint16_t)d;
-                    case thirtytwo:
-                        os << (uint32_t)d;
-                    case sixtyfour:
-                        os << (uint64_t)d;
-                }
+                os << d << ";";
             }
-   
+
             return os;
-        }
-
-        friend std::istream& operator>>( std::istream& os, IntCompress& tc ) {
-            // Read header
-            std::uint64_t seed;
-            std::uint32_t size;
-            std::uint32_t type;
-
-            os.read(reinterpret_cast<char*>(&seed), sizeof seed);
-            os.read(reinterpret_cast<char*>(&type), sizeof type);
-            os.read(reinterpret_cast<char*>(&size), sizeof size);
-
-            tc._seed = seed;
-            tc._maxDeltaType = (DeltaType)type;
-
-std::cout << "seed = " << tc._seed << std::endl;
-std::cout << "type = " << tc._maxDeltaType << std::endl;
-std::cout << "size = " << size << std::endl;
-
-            // TODO: could look at the number of same sequencial values and store X values of Y.  This
-            // TODO: should probably self-optimize considering we don't know what the data looks like.
-
-            // write delta vector
-            for( int i = 0; i < size ; i++ ) {
-                switch (tc._maxDeltaType) {
-                    case eight:
-                        std::uint8_t d1;
-                        os.read(reinterpret_cast<char*>(&d1), sizeof d1);
-                        tc._deltas.push_back(d1);
-                    case sixteen:
-                        uint16_t d2;
-                        os.read(reinterpret_cast<char*>(&d2), sizeof d2);
-                        tc._deltas.push_back(d2);
-                    case thirtytwo:
-                        uint32_t d3;
-                        os.read(reinterpret_cast<char*>(&d3), sizeof d3);
-                        tc._deltas.push_back(d3);
-                    case sixtyfour:
-                        uint64_t d4;
-                        os.read(reinterpret_cast<char*>(&d4), sizeof d4);
-                        tc._deltas.push_back(d4);
-                }
-            }
-std::cout << "created = " << tc._deltas.size() << std::endl;
-   
-            return os;
-        }
+        };
 
         friend bool operator==(const IntCompress& lhs, const IntCompress& rhs) {
             if (lhs._seed == rhs._seed) {
@@ -114,8 +70,9 @@ std::cout << "created = " << tc._deltas.size() << std::endl;
                    }
                 }
             }
+
             return false;
-        }
+        };
 
     private:
 
@@ -124,23 +81,33 @@ std::cout << "created = " << tc._deltas.size() << std::endl;
         uint64_t _maxDelta;
         enum DeltaType { eight, sixteen, thirtytwo, sixtyfour } _maxDeltaType;
 
+        friend class boost::serialization::access;
+        // When the class Archive corresponds to an output archive, the
+        // & operator is defined similar to <<.  Likewise, when the class Archive
+        // is a type of input archive the & operator is defined similar to >>.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & _seed;
+            ar & _maxDeltaType;
+            ar & _deltas;
+        }
 
     protected:
 
         void determineSeedValues(std::vector<uint64_t> values) {
             for ( uint64_t l : values ) {
-std::cout << l << std::endl;
                if ( l < _seed ) { _seed = l; }
             }
-std::cout << _seed << std::endl;
         }
 
         void createDeltaValues(std::vector<uint64_t> values) {
             for ( uint64_t l : values ) {
-               _deltas.push_back(l-_seed);
+               uint64_t delta = l-_seed;
+               _deltas.push_back(delta);
 
                // Determine the max size of the delta values for storage compression
-               max(l);
+               max(delta);
             }
         }
 
