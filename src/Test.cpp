@@ -2,16 +2,19 @@
 #include <FieldsTest.cpp>
 #include <LineTest.cpp>
 #include <IntCompressTest.cpp>
+#include <DeltaCompressTest.cpp>
 
 int main ( ) {
   FieldsTest fieldsTest;
   LineTest lineTest;
   IntCompressTest intCompressTest;
+  DeltaCompressTest deltaCompressTest;
 
   Test::TextOutput output(Test::TextOutput::Verbose);
 
   int rtn = fieldsTest.run(output) ? 1 : 0;
   rtn = rtn |  lineTest.run(output) ? 1 : 0;
   rtn = rtn |  intCompressTest.run(output) ? 1 : 0;
+  rtn = rtn |  deltaCompressTest.run(output) ? 1 : 0;
   return rtn;
 }

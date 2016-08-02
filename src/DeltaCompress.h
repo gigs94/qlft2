@@ -1,5 +1,5 @@
-#ifndef __INT_COMPRESS_H__
-#define __INT_COMPRESS_H__
+#ifndef __DELTA_COMPRESS_H__
+#define __DELTA_COMPRESS_H__
 
 #include <string>
 #include <vector>
@@ -11,23 +11,31 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/serialization/vector.hpp>
 
-class IntCompress {
+class DeltaCompress {
     /**
-     *  IntCompress is a class that takes a vector and creates a list of deltas based on the minimal value (the seed).
+     *  DeltaCompress is a class that takes a vector and creates a list of deltas based on the minimal value (the seed).
      *  This can be streamed to a file in binary format for compression sake.
      */
     public:
 
-        IntCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
-        IntCompress(std::vector<uint64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
-        IntCompress(const IntCompress& tc) {};
-        virtual ~IntCompress() {};
+        DeltaCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
+        DeltaCompress(std::vector<uint64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
+        DeltaCompress(const DeltaCompress& tc) {};
+        virtual ~DeltaCompress() {};
 
         std::vector<uint64_t> decompress() {
             std::vector<uint64_t> rtn;
-            
+            bool first{true};
+            uint64_t prev{0};
+
             for (uint64_t d : _deltas) {
-                rtn.push_back(d+_seed);
+                if (first) {
+                    prev = d+_seed;
+                    first=false;
+                } else {
+                    prev = d+prev;
+                }
+                rtn.push_back(prev);
             }
 
             return std::move(rtn);
@@ -44,7 +52,7 @@ class IntCompress {
            determineMaxDeltaType();
         };
 
-        friend std::ostream& operator<<( std::ostream& os, const IntCompress& tc ) {
+        friend std::ostream& operator<<( std::ostream& os, const DeltaCompress& tc ) {
             // Write header
             os << tc._seed << ":";
             os << tc._maxDelta << ":";
@@ -62,7 +70,7 @@ class IntCompress {
             return os;
         };
 
-        friend bool operator==(const IntCompress& lhs, const IntCompress& rhs) {
+        friend bool operator==(const DeltaCompress& lhs, const DeltaCompress& rhs) {
             if (lhs._seed == rhs._seed) {
                if (lhs._maxDeltaType == rhs._maxDeltaType) {
                    if (lhs._deltas == rhs._deltas) {
@@ -95,15 +103,30 @@ class IntCompress {
 
     protected:
 
+        // Seed value is always the first value in this case
         void determineSeedValues(std::vector<uint64_t> values) {
             for ( uint64_t l : values ) {
-               if ( l < _seed ) { _seed = l; }
+               _seed = l;
+               break;
             }
         }
 
         void createDeltaValues(std::vector<uint64_t> values) {
+            bool first=true;
+            uint64_t prev{0};
+            uint64_t delta{0};
+
             for ( uint64_t l : values ) {
-               uint64_t delta = l-_seed;
+               // first delta is always 0
+               if (first) {
+                    first=false;
+               } else {
+                    delta = l-prev;
+               }
+
+std::cout << l << " : " << delta <<  std::endl;
+
+               prev=l;
                _deltas.push_back(delta);
 
                // Determine the max size of the delta values for storage compression
@@ -123,4 +146,4 @@ class IntCompress {
         }
 };
 
-#endif // __INT_COMPRESS_H__
+#endif // __DELTA_COMPRESS_H__
