@@ -1,7 +1,7 @@
 all: main
 
-tester: src/LineTest.cpp src/Line.h src/FieldsTest.cpp src/Fields.h
-	clang++ -pedantic -std=c++11 -o tester src/Test.cpp -I/usr/local/include -I./src  -lcpptest
+tester: src/LineTest.cpp src/Line.h src/FieldsTest.cpp src/Fields.h src/Test.cpp src/IntCompressTest.cpp
+	clang++ -v -pedantic -std=c++11 -o tester src/Test.cpp -I/usr/local/include -I./src  -lcpptest -v
 
 test: tester
 
