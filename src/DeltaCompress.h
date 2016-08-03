@@ -124,8 +124,6 @@ class DeltaCompress {
                     delta = l-prev;
                }
 
-std::cout << l << " : " << delta <<  std::endl;
-
                prev=l;
                _deltas.push_back(delta);
 
