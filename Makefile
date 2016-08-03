@@ -1,12 +1,21 @@
+
+
+INCLUDES = $(wildcard src/*.h)
+TEST_INCLUDES = $(wildcard src/*.hpp)
+
+
 all: main
 
-tester: src/CsvParserTest.cpp src/CsvParser.h src/FieldTest.hpp src/Field.h src/Test.cpp src/IntCompressTest.cpp src/DeltaCompressTest.cpp src/DeltaCompress.h src/IntCompress.h src/StringCompress.h src/StringCompressTest.hpp
+tester: $(INCLUDES) $(TEST_INCLUDES) src/test.cpp 
 	clang++ -pedantic -std=c++11 -o tester src/Test.cpp -I/usr/local/include -I./src  -lcpptest -lboost_serialization
 
 test: tester
 
-stock_processor: 
-	clang++ -pedantic -std=c++11 -o ebat_processor src/main.cpp -I./src -lboost_serialization
+decompressor:  $(INCLUDES) src/ebat_decompressor.cpp
+	clang++ -pedantic -std=c++11 -o decompressor src/ebat_decompressor.cpp -I./src -lboost_serialization
 
-main: stock_processor
+compressor:  $(INCLUDES) src/ebat_compressor.cpp
+	clang++ -pedantic -std=c++11 -o compressor src/ebat_compressor.cpp -I./src -lboost_serialization
+
+main: compressor decompressor
 

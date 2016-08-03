@@ -1,8 +1,9 @@
 #include <FieldTest.hpp>
-#include <CsvParserTest.cpp>
-#include <IntCompressTest.cpp>
-#include <DeltaCompressTest.cpp>
+#include <CsvParserTest.hpp>
+#include <IntCompressTest.hpp>
+#include <DeltaCompressTest.hpp>
 #include <StringCompressTest.hpp>
+#include <PackDupsTest.hpp>
 
 int main ( ) {
   FieldTest fieldTest;
@@ -10,6 +11,7 @@ int main ( ) {
   IntCompressTest intCompressTest;
   DeltaCompressTest deltaCompressTest;
   StringCompressTest stringCompressTest;
+  PackDupsTest packDupsTest;
 
   Test::TextOutput output(Test::TextOutput::Verbose);
 
@@ -18,5 +20,6 @@ int main ( ) {
   rtn = rtn |  intCompressTest.run(output) ? 1 : 0;
   rtn = rtn |  deltaCompressTest.run(output) ? 1 : 0;
   rtn = rtn |  stringCompressTest.run(output) ? 1 : 0;
+  rtn = rtn |  packDupsTest.run(output) ? 1 : 0;
   return rtn;
 }

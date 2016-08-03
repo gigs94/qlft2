@@ -27,8 +27,6 @@ class StringCompressTest : public Test::Suite {
        StringCompress sc{values};
        StringCompress sc1{values1};
 
-std::cout << sc << std::endl;
-
        TEST_ASSERT(sc1 != sc);
     }
 

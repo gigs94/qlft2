@@ -12,28 +12,19 @@ int main()
     std::ifstream infile{"ebat.csv"};
     CsvParser parser{infile};
 
-    /* Row line_definition;
-    line_definition.addField("stockName", FieldType::stringT);
-    line_definition.addField("exchange", FieldType::stringT);
-    line_definition.addField("side", FieldType::stringT);
-    line_definition.addField("condition", FieldType::stringT);
-    line_definition.addField("time", FieldType::longT);
-    line_definition.addField("reptime", FieldType::longT);
-    line_definition.addField("price", FieldType::floatT);
-    line_definition.addField("size", FieldType::intT); */
-
     std::vector<std::string> stocks{};
     std::vector<std::string> exchange{};
     std::vector<std::string> side{};
     std::vector<std::string> condition{};
-    std::vector<uint64_t> time{};
-    std::vector<uint64_t> reptime{};
+    std::vector<int64_t> time{};
+    std::vector<int64_t> reptime{};
     std::vector<float> price{};
-    std::vector<uint64_t> size{};
+    std::vector<int64_t> size{};
 
     // Since CsvParser reads the first line in on ctor, you have to do the do-while loop.
     do {
        try {
+           // create column based views of the data
            stocks.push_back(parser.stringValue());
            exchange.push_back(parser.stringValue());
            side.push_back(parser.stringValue());
@@ -50,7 +41,6 @@ int main()
 
     FullCompress full{stocks, exchange, side, condition, time, reptime, price, size};
     FullCompress decompress{};
-
     
     {
         std::ofstream outfile{"ebat.compressed"};
@@ -61,16 +51,15 @@ int main()
     auto finish = std::chrono::high_resolution_clock::now();
     auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
 
-    
+    // Verification that the compression worked.
     {
         std::ifstream ifs("ebat.compressed");
         boost::archive::binary_iarchive ia(ifs);
         ia >> decompress;
         assert(full==decompress);
-   }
+    }
 
-   // TODO calculate statistics for the compression... need to start a stopwatch, get the input filesize(ifs), and the compressed file size(cfs).
-   // compression ratio = cfs/ifs.
+    // Do the stats for the run
     std::ifstream in("ebat.csv", std::ifstream::binary | std::ifstream::ate );
     std::ifstream out("ebat.compressed", std::ifstream::binary | std::ifstream::ate );
     int cfs = out.tellg(); 

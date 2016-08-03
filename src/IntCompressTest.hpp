@@ -40,7 +40,7 @@ class IntCompressTest : public Test::Suite {
        }
        std::cout << std::endl;
    
-       assert(values==dvalues);
+       TEST_ASSERT(values==dvalues);
        TEST_ASSERT_EQUALS(_compress,_decompress);
     }
 

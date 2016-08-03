@@ -6,6 +6,7 @@
 #include <ostream>
 #include <istream>
 #include <cstdint>
+#include <PackDups.h>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -19,16 +20,16 @@ class DeltaCompress {
     public:
 
         DeltaCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
-        DeltaCompress(std::vector<uint64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
+        DeltaCompress(std::vector<int64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
         DeltaCompress(const DeltaCompress& tc) {};
         virtual ~DeltaCompress() {};
 
-        std::vector<uint64_t> decompress() {
-            std::vector<uint64_t> rtn;
+        std::vector<int64_t> decompress() const {
+            std::vector<int64_t> rtn;
             bool first{true};
-            uint64_t prev{0};
+            int64_t prev{0};
 
-            for (uint64_t d : _deltas) {
+            for (int64_t d : _deltas) {
                 if (first) {
                     prev = d+_seed;
                     first=false;
@@ -41,7 +42,7 @@ class DeltaCompress {
             return std::move(rtn);
         }
 
-        void compress(std::vector<uint64_t>& values) {
+        void compress(std::vector<int64_t>& values) {
            // Spin through the values to determine the _seed value
            determineSeedValues(values);
 
@@ -63,7 +64,7 @@ class DeltaCompress {
             // TODO: should probably self-optimize considering we don't know what the data looks like.
 
             // write delta vector
-            for( uint64_t d : tc._deltas ) {
+            for( int64_t d : tc._deltas ) {
                 os << d << ";";
             }
 
@@ -84,39 +85,135 @@ class DeltaCompress {
 
     private:
 
-        uint64_t _seed;
-        std::vector<uint64_t> _deltas;
-        uint64_t _maxDelta;
+        int64_t _seed;
+        std::vector<int64_t> _deltas;
+        int64_t _maxDelta;
         enum DeltaType { eight, sixteen, thirtytwo, sixtyfour } _maxDeltaType;
 
         friend class boost::serialization::access;
-        // When the class Archive corresponds to an output archive, the
-        // & operator is defined similar to <<.  Likewise, when the class Archive
-        // is a type of input archive the & operator is defined similar to >>.
+        BOOST_SERIALIZATION_SPLIT_MEMBER();
+
         template<class Archive>
-        void serialize(Archive & ar, const unsigned int version)
-        {
-            ar & _seed;
-            ar & _maxDeltaType;
-            ar & _deltas;
+        void save(Archive & ar, const unsigned int version) const {
+            ar << _seed;
+            ar << _maxDeltaType;
+
+            switch (_maxDeltaType) {
+                case eight:
+                    {
+std::cout << "here 8" << std::endl;
+                        std::vector<int8_t> newdeltas;
+                        for ( int8_t i : _deltas ) {
+                            newdeltas.push_back(i);
+                        }
+                        auto packed_newdeltas = packDups(newdeltas);
+                        ar << packed_newdeltas;
+                    }
+                    break;
+                case  sixteen:
+                    {
+std::cout << "here 16" << std::endl;
+                        std::vector<int16_t> newdeltas;
+                        for ( int16_t i : _deltas ) {
+                            newdeltas.push_back(i);
+                        }
+                        auto packed_newdeltas = packDups(newdeltas);
+                        ar << packed_newdeltas;
+                    }
+                    break;
+                case  thirtytwo:
+                    {
+std::cout << "here 32" << std::endl;
+                        std::vector<int32_t> newdeltas;
+                        for ( int32_t i : _deltas ) {
+                            newdeltas.push_back(i);
+                        }
+                        auto packed_newdeltas = packDups(newdeltas);
+                        ar << packed_newdeltas;
+                    }
+                    break;
+                case  sixtyfour:
+std::cout << "here 64" << std::endl;
+                    auto packed_newdeltas = packDups(_deltas);
+                    ar << packed_newdeltas;
+                    break;
+            }
+
         }
+
+        template<class Archive>
+        void load(Archive & ar, const unsigned int version) {
+            ar >> _seed;
+            ar >> _maxDeltaType;
+
+            switch (_maxDeltaType) {
+                case eight:
+                    {
+std::cout << "here >> 8" << std::endl;
+                        std::vector<std::pair<int,int8_t>> packed_newdeltas;
+                        ar >> packed_newdeltas;
+                        
+                        auto newdeltas = unPackDups(packed_newdeltas);
+                        for ( int8_t i : newdeltas ) {
+                            _deltas.push_back(i);
+                        }
+                    }
+                    break;
+                case  sixteen:
+                    {
+std::cout << "here >> 16" << std::endl;
+                        std::vector<std::pair<int,int16_t>> packed_newdeltas;
+                        ar >> packed_newdeltas;
+                        
+                        auto newdeltas = unPackDups(packed_newdeltas);
+                        for ( int16_t i : newdeltas ) {
+                            _deltas.push_back(i);
+                        }
+                    }
+                    break;
+                case  thirtytwo:
+                    {
+std::cout << "here >> 32" << std::endl;
+                        std::vector<std::pair<int,int32_t>> packed_newdeltas;
+                        ar >> packed_newdeltas;
+                        
+                        auto newdeltas = unPackDups(packed_newdeltas);
+                        for ( int32_t i : newdeltas ) {
+                            _deltas.push_back(i);
+                        }
+                    }
+                    break;
+                case  sixtyfour:
+std::cout << "here >> 64" << std::endl;
+                        std::vector<std::pair<int,int64_t>> packed_newdeltas;
+                        ar >> packed_newdeltas;
+                        
+                        auto newdeltas = unPackDups(packed_newdeltas);
+                        for ( int64_t i : newdeltas ) {
+                            _deltas.push_back(i);
+                        }
+                    break;
+            }
+
+        }
+
 
     protected:
 
         // Seed value is always the first value in this case
-        void determineSeedValues(std::vector<uint64_t> values) {
-            for ( uint64_t l : values ) {
+        void determineSeedValues(std::vector<int64_t> values) {
+            for ( int64_t l : values ) {
                _seed = l;
                break;
             }
         }
 
-        void createDeltaValues(std::vector<uint64_t> values) {
+        void createDeltaValues(std::vector<int64_t> values) {
             bool first=true;
-            uint64_t prev{0};
-            uint64_t delta{0};
+            int64_t prev{0};
+            int64_t delta{0};
 
-            for ( uint64_t l : values ) {
+            for ( int64_t l : values ) {
                // first delta is always 0
                if (first) {
                     first=false;
@@ -132,7 +229,7 @@ class DeltaCompress {
             }
         }
 
-        void max(uint64_t value) {
+        void max(int64_t value) {
            if (value > _maxDelta) { _maxDelta = value; }
         }
 

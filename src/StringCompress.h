@@ -10,6 +10,8 @@
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 
@@ -25,12 +27,12 @@ class StringCompress {
         StringCompress(const StringCompress& tc) {};
         virtual ~StringCompress() {};
 
-        std::vector<std::string> decompress() {
+        std::vector<std::string> decompress() const {
             std::vector<std::string> rtn;
 
             for ( int p : _values ) {
                 // find the value for p
-                rtn.push_back(_dict[p]);
+                rtn.push_back(_dict.at(p));
             }
 
             return std::move(rtn);
@@ -87,14 +89,19 @@ class StringCompress {
         std::vector<int> _values;
         
         friend class boost::serialization::access;
+        BOOST_SERIALIZATION_SPLIT_MEMBER();
+
         template<class Archive>
-        void serialize(Archive & ar, const unsigned int version)
-        {
-            ar & _dict;
-            ar & _values;
+        void save(Archive & ar, const unsigned int version) const {
+            ar << _dict;
+            ar << _values;
         }
 
-    protected:
+        template<class Archive>
+        void load(Archive & ar, const unsigned int version) {
+            ar >> _dict;
+            ar >> _values;
+        }
 
 };
 

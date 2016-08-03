@@ -9,6 +9,7 @@
 #include <StringCompress.h>
 #include <DeltaCompress.h>
 #include <FloatCompress.h>
+#include <Zip.h>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -24,10 +25,10 @@ class FullCompress {
                      std::vector<std::string>& exchange,
                      std::vector<std::string>& side,
                      std::vector<std::string>& condition,
-                     std::vector<uint64_t>& time,
-                     std::vector<uint64_t>& reptime,
+                     std::vector<int64_t>& time,
+                     std::vector<int64_t>& reptime,
                      std::vector<float>& price,
-                     std::vector<uint64_t>& size) :
+                     std::vector<int64_t>& size) :
             _stocks{stocks},
             _exchange{exchange},
             _side{side},
@@ -41,29 +42,64 @@ class FullCompress {
         virtual ~FullCompress() {};
 
         friend std::ostream& operator<<( std::ostream& os, const FullCompress& rhs ) {
-            os << rhs._stocks
-               << rhs._exchange 
-               << rhs._side 
-               << rhs._condition 
-               << rhs._time 
-               << rhs._reptime 
-               << rhs._price 
-               << rhs._size;
+            std::vector<std::string> stocks = rhs._stocks.decompress();
+            std::vector<std::string> exchange = rhs._exchange.decompress();
+            std::vector<std::string> side = rhs._side.decompress();
+            std::vector<std::string> condition = rhs._condition.decompress();
+            std::vector<int64_t> time = rhs._time.decompress();
+            std::vector<int64_t> reptime = rhs._reptime.decompress();
+            std::vector<float> price = rhs._price.decompress();
+            std::vector<int64_t> size = rhs._size.decompress();
+
+            zip (
+                [&](std::string i,
+                   std::string j,
+                   std::string k,
+                   std::string l,
+                   int64_t m,
+                   int64_t n,
+                   float o,
+                   int p) {
+                    os << i << ","
+                       << j << ","
+                       << k << ","
+                       << l << ","
+                       << m << ","
+                       << n << ","
+                       << o << ","
+                       << p
+                       << std::endl;
+                   },
+                stocks.begin(),stocks.end(),
+                exchange.begin(),
+                side.begin(),
+                condition.begin(),
+                time.begin(),
+                reptime.begin(),
+                price.begin(),
+                size.begin());
 
             return os;
         };
 
         friend bool operator==(const FullCompress& lhs, const FullCompress& rhs) {
-            if (lhs._stocks == rhs._stocks &&
-                lhs._exchange == rhs._exchange &&
-                lhs._side == rhs._side &&
-                lhs._condition == rhs._condition &&
-                lhs._time == rhs._time &&
-                lhs._reptime == rhs._reptime &&
-                lhs._price == rhs._price &&
-                lhs._size == rhs._size) {
+            if (lhs._stocks == rhs._stocks) { 
+                if (lhs._exchange == rhs._exchange) { 
+                    if (lhs._side == rhs._side) {
+                        if (lhs._condition == rhs._condition) {
+                            if (lhs._time == rhs._time) {
+                                if (lhs._reptime == rhs._reptime) {
+                                    if (lhs._price == rhs._price) {
+                                        if (lhs._size == rhs._size) {
 
-                return true;
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             return false;

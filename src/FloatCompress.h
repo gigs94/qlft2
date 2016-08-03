@@ -23,7 +23,7 @@ class FloatCompress {
         FloatCompress(const FloatCompress& tc) {};
         virtual ~FloatCompress() {};
 
-        std::vector<float> decompress() {
+        std::vector<float> decompress() const {
             std::vector<float> rtn;
             bool first{true};
             float prev{0};
