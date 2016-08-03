@@ -1,6 +1,6 @@
 
-#ifndef __LINE_H__
-#define __LINE_H__
+#ifndef __CSV_PARSER_H__
+#define __CSV_PARSER_H__
 
 #include <iostream>
 #include <fstream>
@@ -41,53 +41,49 @@ float _getFloat(std::istringstream& line) {
 };
 
 
-class Line {
-    /** Line is a class that allows each configuration for different
+class CsvParser {
+    /** CsvParser is a class that allows each configuration for different
      *  field types (columns) from a csv file stream -- contructed on a
      *  stream to read and reads until the next delimiter
      */
 
-  public:
+    public:
 
-    std::string stringValue() {
-        return std::move(_getString(_line));
-    };
+        std::string stringValue() {
+            return std::move(_getString(_line));
+        };
 
-    int intValue() {
-        return _getInteger(_line);
-    };
+        int intValue() {
+            return _getInteger(_line);
+        };
 
-    long longValue() {
-        return _getLong(_line);
-    };
+        long longValue() {
+            return _getLong(_line);
+        };
 
-    float floatValue() {
-        return _getFloat(_line);
-    };
+        float floatValue() {
+            return _getFloat(_line);
+        };
 
-    void moveToNextLine() {
-        _line = _getLine(_infile);
-        //return std::move(Line(_infile));
-    };
+        bool moveToNextLine() {
+            try {
+                _line = _getLine(_infile);
+            } catch (std::overflow_error err) {
+                return false;
+            }
+            return true;
+        };
 
-    // ctor/dtor/move
-    Line(std::ifstream& mystream) : 
-        _infile(std::move(mystream)),
-        _line(_getLine(mystream)) {};
-    virtual ~Line() {};
-    Line(Line&& rhs) noexcept : _line(std::move(rhs._line)), _infile(std::move(rhs._infile)) {};
+        // ctor/dtor/move
+        CsvParser(std::ifstream& mystream) : 
+            _infile(std::move(mystream)),
+            _line(_getLine(mystream)) {};
+        virtual ~CsvParser() {};
+        CsvParser(CsvParser&& rhs) noexcept : _line(std::move(rhs._line)), _infile(std::move(rhs._infile)) {};
 
-    //Line& operator=(Line other)
-    //{
-        //_line = std::move(other._line);
-        //return *this;
-    //}
-
-  private:
-    std::istringstream _line;
-    std::ifstream _infile;
+    private:
+        std::istringstream _line;
+        std::ifstream _infile;
 };
 
-
-#endif // __LINE_H__
-
+#endif // __CSV_PARSER_H__

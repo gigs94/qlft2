@@ -19,28 +19,17 @@ class DeltaCompressTest : public Test::Suite {
        {
            std::ofstream ofs("filename");
            boost::archive::binary_oarchive oa(ofs);
-           // write class instance to archive
            oa << _compress;
-           // archive and stream closed when destructors are called
        }
    
        {
-           // create and open an archive for input
            std::ifstream ifs("filename");
            boost::archive::binary_iarchive ia(ifs);
-           // read class state from archive
            ia >> _decompress;
-           // archive and stream closed when destructors are called
            dvalues = _decompress.decompress();
        }
 
-
-       for (uint64_t d : dvalues) {
-           std::cout << d << ";";
-       }
-       std::cout << std::endl;
-   
-       assert(values==dvalues);
+       TEST_ASSERT(values==dvalues);
        TEST_ASSERT_EQUALS(_compress,_decompress);
     }
 

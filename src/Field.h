@@ -1,9 +1,9 @@
-#ifndef __FIELDS_H__
-#define __FIELDS_H__
+#ifndef __ROWS_H__
+#define __ROWS_H__
 
 #include <string>
 #include <vector>
-#include <Line.h>
+#include <CsvParser.h>
 
 using string_type = std::string;
 
@@ -61,17 +61,24 @@ class Field {
         FieldMetadata _fmd;
 };
 
-class Fields {
+class Row {
+    /**
+     * Row is a class that encapsulates a set of FieldMetadatas and provides a utility
+     * method to take a CsvParser line and return the vector of fields.
+     *
+     * Note: Row doesn't seem like the right name for this class... but RowMetadata or
+     * FieldMetadatas just didn't seem right either
+     */
 
     public:
-        Fields() {};
+        Row() {};
 
         void addField(std::string name, FieldType ft) {
             FieldMetadata field{name,ft};
             _fields.push_back(field);
         }
 
-        std::vector<Field> getLine(Line& line) {
+        std::vector<Field> parseLine(CsvParser& line) {
             std::vector<Field> rtn;
 
 
@@ -101,4 +108,4 @@ class Fields {
         
 };
 
-#endif // __FIELDS_H__
+#endif // __ROWS_H__
