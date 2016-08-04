@@ -35,15 +35,16 @@ class FullCompress {
                      const std::vector<int64_t>& time,
                      const std::vector<int64_t>& reptime,
                      const std::vector<std::string>& price,
-                     const std::vector<int64_t>& size) :
+                     const std::vector<int64_t>& size,
+                     int blockSize) :
             _stocks{stocks},
             _exchange{exchange},
             _side{side},
             _condition{condition},
-            // The block sizes were determined with trial and error... should make them configurable on command line.
-            _time{time, 500},
-            _reptime{reptime, 500},
+            _time{time, blockSize},
+            _reptime{reptime, blockSize},
             _price{price},
+            // blocksize for size is hardcoded right now because it's values aren't as disperse as the time values
             _size{size, 50} {};
         FullCompress(const FullCompress& rhs) {};
         FullCompress() {};
