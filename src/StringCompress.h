@@ -27,7 +27,7 @@ class StringCompress {
     public:
 
         StringCompress() {};
-        StringCompress(std::vector<std::string> values) { compress(values); };
+        StringCompress(const std::vector<std::string>& values) { compress(values); };
         StringCompress(const StringCompress& tc) {};
         virtual ~StringCompress() {};
 
@@ -42,7 +42,7 @@ class StringCompress {
             return std::move(rtn);
         }
 
-        void compress(std::vector<std::string>& values) {
+        void compress(const std::vector<std::string>& values) {
             std::vector<std::string> v{values};
             std::sort(v.begin(), v.end());
             auto last = std::unique(v.begin(), v.end());

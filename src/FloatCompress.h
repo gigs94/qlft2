@@ -90,7 +90,7 @@ class FloatCompress {
         void compress(std::vector<std::string>& values) {
 
            _sigDigits = findSigDigits(values);
-           _dc = DeltaCompress{stripOutDecimals(values, _sigDigits)};
+           _dc = std::move(DeltaCompress{stripOutDecimals(values, _sigDigits)});
 
         };
 

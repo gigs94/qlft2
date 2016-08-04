@@ -16,26 +16,6 @@
 
 
 
-template <typename T>
-vector<size_t> sort_indexes(const vector<T> &v) {
-
-  // initialize original index locations
-  vector<size_t> idx(v.size());
-  iota(idx.begin(), idx.end(), 0);
-
-  // sort indexes based on comparing values in v
-  sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-
-  return idx;
-}
-
-reorder(values) {
-   for ( auto value : values ) {
-       
-   }
-}
-
 class DeltaCompress {
     /**
      *  DeltaCompress is a class that takes a vector and creates a list of deltas based on the minimal value (the seed).
@@ -44,9 +24,16 @@ class DeltaCompress {
     public:
 
         DeltaCompress() : _seed{LONG_MAX} {};
-        DeltaCompress(std::vector<int64_t> values) : _seed{LONG_MAX} { compress(values); };
-        DeltaCompress(const DeltaCompress& tc) {};
         virtual ~DeltaCompress() {};
+        DeltaCompress(const std::vector<int64_t>& values) : _seed{LONG_MAX} { compress(values); };
+        DeltaCompress(const DeltaCompress& tc) : _seed{tc._seed}, _deltas{tc._deltas} {};
+        DeltaCompress(DeltaCompress&& tc) : _seed{std::move(tc._seed)}, _deltas{std::move(tc._deltas)} {};
+        DeltaCompress& operator=(DeltaCompress&& other) {
+            _seed = std::move(other._seed);
+            _deltas = std::move(other._deltas);
+            return *this;
+        }
+      
 
         std::vector<int64_t> decompress() const {
             std::vector<int64_t> rtn;
@@ -66,7 +53,7 @@ class DeltaCompress {
             return std::move(rtn);
         }
 
-        void compress(std::vector<int64_t>& values) {
+        void compress(const std::vector<int64_t>& values) {
            // Spin through the values to determine the _seed value
            determineSeedValues(values);
 
@@ -203,14 +190,14 @@ class DeltaCompress {
     protected:
 
         // Seed value is always the first value in this case
-        void determineSeedValues(std::vector<int64_t> values) {
+        void determineSeedValues(const std::vector<int64_t>& values) {
             for ( int64_t l : values ) {
                _seed = l;
                break;
             }
         }
 
-        void createDeltaValues(std::vector<int64_t> values) {
+        void createDeltaValues(const std::vector<int64_t>& values) {
             bool first=true;
             int64_t prev{0};
             int64_t delta{0};

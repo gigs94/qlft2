@@ -7,7 +7,7 @@
 #include <istream>
 #include <cstdint>
 #include <StringCompress.h>
-#include <DeltaCompress.h>
+#include <DeltaBlock.h>
 //#include <FloatCompress.h>
 #include <Zip.h>
 
@@ -18,38 +18,46 @@ class FullCompress {
     /**
      *  FullCompress is a class that takes a vector and creates a list of deltas based on the minimal value (the seed).
      *  This can be streamed to a file in binary format for compression sake.
+     *
+     *  FullCompress contains the columns for the ebat file format.   Here you can change the type of the column and
+     *  for different modules that are defined for compression.  Currently, only DeltaCompress and StringCompress are
+     *  fully developed and used.  To make a change, you need to change the FullCompress ctor vector type for the new
+     *  compression type and the type of the member.   Fairly simple to play with the compression types for different
+     *  columns for customized performance purposes. 
+     *
      */
     public:
 
-        FullCompress(std::vector<std::string>& stocks,
-                     std::vector<std::string>& exchange,
-                     std::vector<std::string>& side,
-                     std::vector<std::string>& condition,
-                     std::vector<int64_t>& time,
-                     std::vector<int64_t>& reptime,
-                     std::vector<std::string>& price,
-                     std::vector<int64_t>& size) :
+        FullCompress(const std::vector<std::string>& stocks,
+                     const std::vector<std::string>& exchange,
+                     const std::vector<std::string>& side,
+                     const std::vector<std::string>& condition,
+                     const std::vector<int64_t>& time,
+                     const std::vector<int64_t>& reptime,
+                     const std::vector<std::string>& price,
+                     const std::vector<int64_t>& size) :
             _stocks{stocks},
             _exchange{exchange},
             _side{side},
             _condition{condition},
-            _time{time},
-            _reptime{reptime},
+            // The block sizes were determined with trial and error... should make them configurable on command line.
+            _time{time, 500},
+            _reptime{reptime, 500},
             _price{price},
-            _size{size} {};
+            _size{size, 50} {};
         FullCompress(const FullCompress& rhs) {};
         FullCompress() {};
         virtual ~FullCompress() {};
 
         friend std::ostream& operator<<( std::ostream& os, const FullCompress& rhs ) {
-            std::vector<std::string> stocks = rhs._stocks.decompress();
-            std::vector<std::string> exchange = rhs._exchange.decompress();
-            std::vector<std::string> side = rhs._side.decompress();
-            std::vector<std::string> condition = rhs._condition.decompress();
-            std::vector<int64_t> time = rhs._time.decompress();
-            std::vector<int64_t> reptime = rhs._reptime.decompress();
-            std::vector<std::string> price = rhs._price.decompress();
-            std::vector<int64_t> size = rhs._size.decompress();
+            auto stocks = rhs._stocks.decompress();
+            auto exchange = rhs._exchange.decompress();
+            auto side = rhs._side.decompress();
+            auto condition = rhs._condition.decompress();
+            auto time = rhs._time.decompress();
+            auto reptime = rhs._reptime.decompress();
+            auto price = rhs._price.decompress();
+            auto size = rhs._size.decompress();
 
             zip (
                 [&](std::string i,
@@ -110,10 +118,13 @@ class FullCompress {
         StringCompress _exchange;
         StringCompress _side;
         StringCompress _condition;
-        DeltaCompress _time;
-        DeltaCompress _reptime;
+        DeltaBlock _time;
+        DeltaBlock _reptime;
+
+        // Using StringCompress here because convertion to float and back causes precision loss.
+        // There is a FloatCompress module, that gets 'close' but that's not good enough.
         StringCompress _price;
-        DeltaCompress _size;
+        DeltaBlock _size;
 
         friend class boost::serialization::access;
         template<class Archive>
