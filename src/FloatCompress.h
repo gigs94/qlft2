@@ -6,10 +6,66 @@
 #include <ostream>
 #include <istream>
 #include <cstdint>
+#include <regex>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/algorithm/string.hpp>
+
+
+std::vector<std::string> split(const std::string& input, const std::string& regex) {
+    std::regex re(regex);
+    std::sregex_token_iterator
+        first{input.begin(), input.end(), re, -1},
+        last;
+    return {first, last};
+}
+
+int findSigDigits(const std::vector<std::string>& values) {
+    int sigDigs{0};
+    for ( auto value : values ) { 
+        auto a = split(value, "\\.");
+        assert(a.size() <= 2);
+        bool first{true};
+        for ( auto x : a ) {
+            if (first) {
+                first=false;
+            } else {
+                if (x.size() > sigDigs) { sigDigs = x.size(); }
+            }
+            
+        }
+    }
+    return sigDigs;
+}
+
+std::vector<int64_t> stripOutDecimals(std::vector<std::string>& values, int sigDigits) {
+    std::vector<int64_t> rtn;
+
+    std::cout << " >>>> " << std::pow(10,sigDigits) << std::endl;
+
+    for ( auto str : values ) {
+        float f = std::stof(str);
+        int64_t i = static_cast<int64_t>(f*std::pow(10,sigDigits));
+std::cout << str << " : " << f << " : " << f*std::pow(10,sigDigits) << " : " << i << std::endl;
+        rtn.push_back(i);
+    }
+
+    return std::move(rtn);
+}
+
+std::vector<std::string> reconstitute(std::vector<std::int64_t>& values, int sigDigits) {
+    std::vector<std::string> rtn;
+
+    for ( auto i : values ) {
+        float f = static_cast<float>(i)/std::pow(sigDigits,10);
+        rtn.push_back(std::to_string(f));
+    }
+
+    return std::move(rtn);
+}
+
 
 class FloatCompress {
     /**
@@ -18,65 +74,35 @@ class FloatCompress {
      */
     public:
 
-        FloatCompress() : _seed{LONG_MAX}, _maxFloat{0} {};
-        FloatCompress(std::vector<float> values) : _seed{LONG_MAX}, _maxFloat{0} { compress(values); };
+        FloatCompress() : _sigDigits{0} {};
+        FloatCompress(std::vector<std::string> values) : _sigDigits{0} { compress(values); };
         FloatCompress(const FloatCompress& tc) {};
         virtual ~FloatCompress() {};
 
-        std::vector<float> decompress() const {
-            std::vector<float> rtn;
-            bool first{true};
-            float prev{0};
+        std::vector<std::string> decompress() const {
+            std::vector<std::string> rtn;
 
-            for (float d : _deltas) {
-                if (first) {
-                    prev = d+_seed;
-                    first=false;
-                } else {
-                    prev = d+prev;
-                }
-                rtn.push_back(prev);
-            }
+            std::vector<int64_t> dcValues = _dc.decompress();
 
-            return std::move(rtn);
+            return std::move(reconstitute(dcValues, _sigDigits));
         }
 
-        void compress(std::vector<float>& values) {
-           // Spin through the values to determine the _seed value
-           determineSeedValues(values);
+        void compress(std::vector<std::string>& values) {
 
-           // Calculate the differences between _seed value and each value and the max delta value
-           createFloatValues(values);
+           _sigDigits = findSigDigits(values);
+           _dc = DeltaCompress{stripOutDecimals(values, _sigDigits)};
 
-           // Determine the smallest type we can use to compress this data
-           determineMaxFloatType();
         };
 
         friend std::ostream& operator<<( std::ostream& os, const FloatCompress& tc ) {
-            // Write header
-            os << tc._seed << ":";
-            os << tc._maxFloat << ":";
-            os << tc._maxFloatType << ":";
-            os << tc._deltas.size() << ":";
-
-            // TODO: could look at the number of same sequencial values and store X values of Y.  This
-            // TODO: should probably self-optimize considering we don't know what the data looks like.
-
-            // write delta vector
-            for( float d : tc._deltas ) {
-                os << d << ";";
-            }
-
             return os;
         };
 
         friend bool operator==(const FloatCompress& lhs, const FloatCompress& rhs) {
-            if (lhs._seed == rhs._seed) {
-               if (lhs._maxFloatType == rhs._maxFloatType) {
-                   if (lhs._deltas == rhs._deltas) {
-                       return true;
-                   }
-                }
+            if (lhs._sigDigits == rhs._sigDigits) {
+               if (lhs._dc == rhs._dc) {
+                  return true;
+               }
             }
 
             return false;
@@ -84,64 +110,17 @@ class FloatCompress {
 
     private:
 
-        float _seed;
-        std::vector<float> _deltas;
-        float _maxFloat;
-        enum FloatType { eight, sixteen, thirtytwo, sixtyfour } _maxFloatType;
+        int64_t _sigDigits;
+        DeltaCompress _dc;
 
         friend class boost::serialization::access;
-        // When the class Archive corresponds to an output archive, the
-        // & operator is defined similar to <<.  Likewise, when the class Archive
-        // is a type of input archive the & operator is defined similar to >>.
-        template<class Archive>
+        template <class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
-            ar & _seed;
-            ar & _maxFloatType;
-            ar & _deltas;
+            ar & _sigDigits;
+            ar & _dc;
         }
 
-    protected:
-
-        // Seed value is always the first value in this case
-        void determineSeedValues(std::vector<float> values) {
-            for ( float l : values ) {
-               _seed = l;
-               break;
-            }
-        }
-
-        void createFloatValues(std::vector<float> values) {
-            bool first=true;
-            float prev{0};
-            float delta{0};
-
-            for ( float l : values ) {
-               // first delta is always 0
-               if (first) {
-                    first=false;
-               } else {
-                    delta = l-prev;
-               }
-
-               prev=l;
-               _deltas.push_back(delta);
-
-               // Determine the max size of the delta values for storage compression
-               max(delta);
-            }
-        }
-
-        void max(float value) {
-           if (value > _maxFloat) { _maxFloat = value; }
-        }
-
-        void determineMaxFloatType() {
-           if (_maxFloat <= UINT64_MAX) _maxFloatType = sixtyfour;
-           if (_maxFloat <= UINT32_MAX) _maxFloatType = thirtytwo;
-           if (_maxFloat <= UINT16_MAX) _maxFloatType = sixteen;
-           if (_maxFloat <= UINT8_MAX) _maxFloatType = eight;
-        }
 };
 
 #endif // __FLOAT_COMPRESS_H__
