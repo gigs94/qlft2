@@ -1,6 +1,6 @@
 #include <cpptest.h>
 #include <DeltaCompress.h>
-#include <ReorderVector.h>
+// #include <ReorderVector.h>  // moved to unused since we didn't end up using it
 #include <vector>
 #include <iostream>
 #include <boost/archive/binary_oarchive.hpp>
@@ -36,16 +36,16 @@ class DeltaCompressTest : public Test::Suite {
        TEST_ASSERT_EQUALS(_compress,_decompress);
     }
 
-    void sortIndexesTest() {
-        for ( auto i : sort_indexes(values) ) {
-            //std::cout << values[i] << std::endl;
-        }
-    }
+    // void sortIndexesTest() {
+    //     for ( auto i : sort_indexes(values) ) {
+    //         //std::cout << values[i] << std::endl;
+    //     }
+    // }
 
     public: 
       DeltaCompressTest( ) {
          TEST_ADD(DeltaCompressTest::ConstructDeltaCompress);
-         TEST_ADD(DeltaCompressTest::sortIndexesTest);
+         // TEST_ADD(DeltaCompressTest::sortIndexesTest);
       } 
 
 }; 

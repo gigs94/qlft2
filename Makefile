@@ -1,13 +1,13 @@
 
 
 INCLUDES = $(wildcard src/*.h)
-TEST_INCLUDES = $(wildcard src/*.hpp)
+TEST_INCLUDES = $(wildcard test/*.hpp)
 
 
 all: main
 
-tester: $(INCLUDES) $(TEST_INCLUDES) src/test.cpp 
-	clang++ -pedantic -std=c++11 -o tester src/Test.cpp -I/usr/local/include -I./src  -lcpptest -lboost_serialization
+tester: $(INCLUDES) $(TEST_INCLUDES) test/test.cpp 
+	clang++ -pedantic -std=c++11 -o tester test/test.cpp -I/usr/local/include -I./src -I./test -lcpptest -lboost_serialization
 
 test: tester
 
