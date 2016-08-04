@@ -18,7 +18,7 @@ int main()
     std::vector<std::string> condition{};
     std::vector<int64_t> time{};
     std::vector<int64_t> reptime{};
-    std::vector<float> price{};
+    std::vector<std::string> price{};
     std::vector<int64_t> size{};
 
     // Since CsvParser reads the first line in on ctor, you have to do the do-while loop.
@@ -31,7 +31,7 @@ int main()
            condition.push_back(parser.stringValue());
            time.push_back(parser.longValue());
            reptime.push_back(parser.longValue());
-           price.push_back(parser.floatValue());
+           price.push_back(parser.stringValue());
            size.push_back(parser.intValue());
        } catch (std::overflow_error err) {
            std::cerr << "Problem parsing the file.   Reached EOL before reading required fields" << std::endl;
@@ -65,7 +65,7 @@ int main()
     int cfs = out.tellg(); 
     int ifs = in.tellg(); 
 
-    std::cout << "file compressed from " << ifs << " bytes to " << cfs << " bytes.  " << cfs/ifs*100 << "% compression.\n";
+    std::cout << "file compressed from " << ifs << " bytes to " << cfs << " bytes.  " << (cfs*1.0)/ifs*100 << "% compression.\n";
     std::cout << "completed in " << microseconds.count()/1000000.00 << "s" << std::endl;
 
 };

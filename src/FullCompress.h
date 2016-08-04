@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <StringCompress.h>
 #include <DeltaCompress.h>
-#include <FloatCompress.h>
+//#include <FloatCompress.h>
 #include <Zip.h>
 
 #include <boost/archive/binary_oarchive.hpp>
@@ -27,7 +27,7 @@ class FullCompress {
                      std::vector<std::string>& condition,
                      std::vector<int64_t>& time,
                      std::vector<int64_t>& reptime,
-                     std::vector<float>& price,
+                     std::vector<std::string>& price,
                      std::vector<int64_t>& size) :
             _stocks{stocks},
             _exchange{exchange},
@@ -48,7 +48,7 @@ class FullCompress {
             std::vector<std::string> condition = rhs._condition.decompress();
             std::vector<int64_t> time = rhs._time.decompress();
             std::vector<int64_t> reptime = rhs._reptime.decompress();
-            std::vector<float> price = rhs._price.decompress();
+            std::vector<std::string> price = rhs._price.decompress();
             std::vector<int64_t> size = rhs._size.decompress();
 
             zip (
@@ -58,7 +58,7 @@ class FullCompress {
                    std::string l,
                    int64_t m,
                    int64_t n,
-                   float o,
+                   std::string o,
                    int p) {
                     os << i << ","
                        << j << ","
@@ -67,7 +67,7 @@ class FullCompress {
                        << m << ","
                        << n << ","
                        << o << ","
-                       << p
+                       << p << "\r"
                        << std::endl;
                    },
                 stocks.begin(),stocks.end(),
@@ -112,7 +112,7 @@ class FullCompress {
         StringCompress _condition;
         DeltaCompress _time;
         DeltaCompress _reptime;
-        FloatCompress _price;
+        StringCompress _price;
         DeltaCompress _size;
 
         friend class boost::serialization::access;

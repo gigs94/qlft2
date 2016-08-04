@@ -19,21 +19,21 @@ class IntCompress {
     public:
 
         IntCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
-        IntCompress(std::vector<uint64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
+        IntCompress(std::vector<int64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
         IntCompress(const IntCompress& tc) {};
         virtual ~IntCompress() {};
 
-        std::vector<uint64_t> decompress() {
-            std::vector<uint64_t> rtn;
+        std::vector<int64_t> decompress() {
+            std::vector<int64_t> rtn;
             
-            for (uint64_t d : _deltas) {
+            for (int64_t d : _deltas) {
                 rtn.push_back(d+_seed);
             }
 
             return std::move(rtn);
         }
 
-        void compress(std::vector<uint64_t>& values) {
+        void compress(std::vector<int64_t>& values) {
            // Spin through the values to determine the _seed value
            determineSeedValues(values);
 
@@ -55,7 +55,7 @@ class IntCompress {
             // TODO: should probably self-optimize considering we don't know what the data looks like.
 
             // write delta vector
-            for( uint64_t d : tc._deltas ) {
+            for( int64_t d : tc._deltas ) {
                 os << d << ";";
             }
 
@@ -76,9 +76,9 @@ class IntCompress {
 
     private:
 
-        uint64_t _seed;
-        std::vector<uint64_t> _deltas;
-        uint64_t _maxDelta;
+        int64_t _seed;
+        std::vector<int64_t> _deltas;
+        int64_t _maxDelta;
         enum DeltaType { eight, sixteen, thirtytwo, sixtyfour } _maxDeltaType;
 
         friend class boost::serialization::access;
@@ -92,15 +92,15 @@ class IntCompress {
 
     protected:
 
-        void determineSeedValues(std::vector<uint64_t> values) {
-            for ( uint64_t l : values ) {
+        void determineSeedValues(std::vector<int64_t> values) {
+            for ( int64_t l : values ) {
                if ( l < _seed ) { _seed = l; }
             }
         }
 
-        void createDeltaValues(std::vector<uint64_t> values) {
-            for ( uint64_t l : values ) {
-               uint64_t delta = l-_seed;
+        void createDeltaValues(std::vector<int64_t> values) {
+            for ( int64_t l : values ) {
+               int64_t delta = l-_seed;
                _deltas.push_back(delta);
 
                // Determine the max size of the delta values for storage compression
@@ -108,7 +108,7 @@ class IntCompress {
             }
         }
 
-        void max(uint64_t value) {
+        void max(int64_t value) {
            if (value > _maxDelta) { _maxDelta = value; }
         }
 

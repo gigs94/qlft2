@@ -101,7 +101,6 @@ class DeltaCompress {
             switch (_maxDeltaType) {
                 case eight:
                     {
-std::cout << "here 8" << std::endl;
                         std::vector<int8_t> newdeltas;
                         for ( int8_t i : _deltas ) {
                             newdeltas.push_back(i);
@@ -112,7 +111,6 @@ std::cout << "here 8" << std::endl;
                     break;
                 case  sixteen:
                     {
-std::cout << "here 16" << std::endl;
                         std::vector<int16_t> newdeltas;
                         for ( int16_t i : _deltas ) {
                             newdeltas.push_back(i);
@@ -123,7 +121,6 @@ std::cout << "here 16" << std::endl;
                     break;
                 case  thirtytwo:
                     {
-std::cout << "here 32" << std::endl;
                         std::vector<int32_t> newdeltas;
                         for ( int32_t i : _deltas ) {
                             newdeltas.push_back(i);
@@ -133,7 +130,6 @@ std::cout << "here 32" << std::endl;
                     }
                     break;
                 case  sixtyfour:
-std::cout << "here 64" << std::endl;
                     auto packed_newdeltas = packDups(_deltas);
                     ar << packed_newdeltas;
                     break;
@@ -149,8 +145,7 @@ std::cout << "here 64" << std::endl;
             switch (_maxDeltaType) {
                 case eight:
                     {
-std::cout << "here >> 8" << std::endl;
-                        std::vector<std::pair<int,int8_t>> packed_newdeltas;
+                        std::vector<std::pair<uint8_t,int8_t>> packed_newdeltas;
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
@@ -161,8 +156,7 @@ std::cout << "here >> 8" << std::endl;
                     break;
                 case  sixteen:
                     {
-std::cout << "here >> 16" << std::endl;
-                        std::vector<std::pair<int,int16_t>> packed_newdeltas;
+                        std::vector<std::pair<uint8_t,int16_t>> packed_newdeltas;
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
@@ -173,8 +167,7 @@ std::cout << "here >> 16" << std::endl;
                     break;
                 case  thirtytwo:
                     {
-std::cout << "here >> 32" << std::endl;
-                        std::vector<std::pair<int,int32_t>> packed_newdeltas;
+                        std::vector<std::pair<uint8_t,int32_t>> packed_newdeltas;
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
@@ -184,8 +177,7 @@ std::cout << "here >> 32" << std::endl;
                     }
                     break;
                 case  sixtyfour:
-std::cout << "here >> 64" << std::endl;
-                        std::vector<std::pair<int,int64_t>> packed_newdeltas;
+                        std::vector<std::pair<uint8_t,int64_t>> packed_newdeltas;
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
@@ -230,14 +222,14 @@ std::cout << "here >> 64" << std::endl;
         }
 
         void max(int64_t value) {
-           if (value > _maxDelta) { _maxDelta = value; }
+           if (std::abs(value) > _maxDelta) { _maxDelta = std::abs(value); }
         }
 
         void determineMaxDeltaType() {
-           if (_maxDelta <= UINT64_MAX) _maxDeltaType = sixtyfour;
-           if (_maxDelta <= UINT32_MAX) _maxDeltaType = thirtytwo;
-           if (_maxDelta <= UINT16_MAX) _maxDeltaType = sixteen;
-           if (_maxDelta <= UINT8_MAX) _maxDeltaType = eight;
+           if (_maxDelta <= INT64_MAX) _maxDeltaType = sixtyfour;
+           if (_maxDelta <= INT32_MAX) _maxDeltaType = thirtytwo;
+           if (_maxDelta <= INT16_MAX) _maxDeltaType = sixteen;
+           if (_maxDelta <= INT8_MAX) _maxDeltaType = eight;
         }
 };
 
