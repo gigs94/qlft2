@@ -106,25 +106,14 @@ class StringCompress {
             switch(max.maxType()) {
                 case eight:
                     {
-std::cout << "8\n";
                         std::vector<int8_t> new_values;
                         resizeIntVector(_values, new_values);
-
-            /* zip (
-                [&](int8_t n, int64_t o) {
-                    std::cout << o << "," << (int)n << std::endl;
-                   },
-                _values.begin(),_values.end(),
-                new_values.end()); */
-
-
                         auto packed_values = packDups(new_values);
                         ar << packed_values;
                     }
                     break;
                 case  sixteen:
                     {
-std::cout << "16\n";
                         std::vector<int16_t> new_values;
                         resizeIntVector(_values, new_values);
                         auto packed_values = packDups(new_values);
@@ -133,7 +122,6 @@ std::cout << "16\n";
                     break;
                 case  thirtytwo:
                     {
-std::cout << "32\n";
                         std::vector<int32_t> new_values;
                         resizeIntVector(_values, new_values);
                         auto packed_values = packDups(new_values);
@@ -142,7 +130,6 @@ std::cout << "32\n";
                     break;
                 case  sixtyfour:
                     {
-std::cout << "64\n";
                         std::vector<int64_t> new_values;
                         resizeIntVector(_values, new_values);
                         auto packed_values = packDups(new_values);

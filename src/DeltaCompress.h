@@ -7,6 +7,8 @@
 #include <istream>
 #include <cstdint>
 #include <PackDups.h>
+#include <MaxSize.h>
+#include <ResizeIntVector.h>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -19,8 +21,8 @@ class DeltaCompress {
      */
     public:
 
-        DeltaCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
-        DeltaCompress(std::vector<int64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
+        DeltaCompress() : _seed{LONG_MAX} {};
+        DeltaCompress(std::vector<int64_t> values) : _seed{LONG_MAX} { compress(values); };
         DeltaCompress(const DeltaCompress& tc) {};
         virtual ~DeltaCompress() {};
 
@@ -48,16 +50,11 @@ class DeltaCompress {
 
            // Calculate the differences between _seed value and each value and the max delta value
            createDeltaValues(values);
-
-           // Determine the smallest type we can use to compress this data
-           determineMaxDeltaType();
         };
 
         friend std::ostream& operator<<( std::ostream& os, const DeltaCompress& tc ) {
             // Write header
             os << tc._seed << ":";
-            os << tc._maxDelta << ":";
-            os << tc._maxDeltaType << ":";
             os << tc._deltas.size() << ":";
 
             // TODO: could look at the number of same sequencial values and store X values of Y.  This
@@ -73,11 +70,9 @@ class DeltaCompress {
 
         friend bool operator==(const DeltaCompress& lhs, const DeltaCompress& rhs) {
             if (lhs._seed == rhs._seed) {
-               if (lhs._maxDeltaType == rhs._maxDeltaType) {
-                   if (lhs._deltas == rhs._deltas) {
-                       return true;
-                   }
-                }
+               if (lhs._deltas == rhs._deltas) {
+                   return true;
+               }
             }
 
             return false;
@@ -87,8 +82,6 @@ class DeltaCompress {
 
         int64_t _seed;
         std::vector<int64_t> _deltas;
-        int64_t _maxDelta;
-        enum DeltaType { eight, sixteen, thirtytwo, sixtyfour } _maxDeltaType;
 
         friend class boost::serialization::access;
         BOOST_SERIALIZATION_SPLIT_MEMBER();
@@ -96,9 +89,13 @@ class DeltaCompress {
         template<class Archive>
         void save(Archive & ar, const unsigned int version) const {
             ar << _seed;
-            ar << _maxDeltaType;
 
-            switch (_maxDeltaType) {
+            MaxSize max;
+            max.max(_deltas);
+
+            ar << max.maxType();
+
+            switch (max.maxType()) {
                 case eight:
                     {
                         std::vector<int8_t> newdeltas;
@@ -140,18 +137,18 @@ class DeltaCompress {
         template<class Archive>
         void load(Archive & ar, const unsigned int version) {
             ar >> _seed;
-            ar >> _maxDeltaType;
+            MaxType maxType;
 
-            switch (_maxDeltaType) {
+            ar >> maxType;
+
+            switch (maxType) {
                 case eight:
                     {
                         std::vector<std::pair<uint8_t,int8_t>> packed_newdeltas;
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
-                        for ( int8_t i : newdeltas ) {
-                            _deltas.push_back(i);
-                        }
+                        resizeIntVector(newdeltas, _deltas);
                     }
                     break;
                 case  sixteen:
@@ -160,9 +157,7 @@ class DeltaCompress {
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
-                        for ( int16_t i : newdeltas ) {
-                            _deltas.push_back(i);
-                        }
+                        resizeIntVector(newdeltas, _deltas);
                     }
                     break;
                 case  thirtytwo:
@@ -171,9 +166,7 @@ class DeltaCompress {
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
-                        for ( int32_t i : newdeltas ) {
-                            _deltas.push_back(i);
-                        }
+                        resizeIntVector(newdeltas, _deltas);
                     }
                     break;
                 case  sixtyfour:
@@ -181,9 +174,7 @@ class DeltaCompress {
                         ar >> packed_newdeltas;
                         
                         auto newdeltas = unPackDups(packed_newdeltas);
-                        for ( int64_t i : newdeltas ) {
-                            _deltas.push_back(i);
-                        }
+                        resizeIntVector(newdeltas, _deltas);
                     break;
             }
 
@@ -215,21 +206,7 @@ class DeltaCompress {
 
                prev=l;
                _deltas.push_back(delta);
-
-               // Determine the max size of the delta values for storage compression
-               max(delta);
             }
-        }
-
-        void max(int64_t value) {
-           if (std::abs(value) > _maxDelta) { _maxDelta = std::abs(value); }
-        }
-
-        void determineMaxDeltaType() {
-           if (_maxDelta <= INT64_MAX) _maxDeltaType = sixtyfour;
-           if (_maxDelta <= INT32_MAX) _maxDeltaType = thirtytwo;
-           if (_maxDelta <= INT16_MAX) _maxDeltaType = sixteen;
-           if (_maxDelta <= INT8_MAX) _maxDeltaType = eight;
         }
 };
 
