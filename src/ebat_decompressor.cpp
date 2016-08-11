@@ -48,14 +48,14 @@ int main(int argc, char **argv)
     FullCompress decompress{};
 
     {
-        std::ifstream ifs{infileName};
+        std::ifstream infile{infileName};
 
         if (!infile.good()) {
             std::cerr << infileName << " not a valid file." << std::endl;
             return 1;
         }
 
-        boost::archive::binary_iarchive ia(ifs);
+        boost::archive::binary_iarchive ia(infile);
         ia >> decompress;
     }
 
