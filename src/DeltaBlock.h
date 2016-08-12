@@ -20,9 +20,9 @@ class DeltaBlock {
      */
     public:
 
-        DeltaBlock() {};
+        DeltaBlock() : _blockSize{100000} {};
         DeltaBlock(std::vector<int64_t> values, int64_t blockSize) : _blockSize{blockSize} { compress(values); };
-        DeltaBlock(const DeltaBlock& tc) {};
+        DeltaBlock(const DeltaBlock& tc) : _blockSize{tc._blockSize} {};
         virtual ~DeltaBlock() {};
 
         std::vector<int64_t> decompress() const {

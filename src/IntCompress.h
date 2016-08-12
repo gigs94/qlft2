@@ -18,9 +18,9 @@ class IntCompress {
      */
     public:
 
-        IntCompress() : _seed{LONG_MAX}, _maxDelta{0} {};
+        IntCompress() : _seed{LONG_MAX}, _maxDelta{0}, _maxDeltaType{stringT} {};
         IntCompress(std::vector<int64_t> values) : _seed{LONG_MAX}, _maxDelta{0} { compress(values); };
-        IntCompress(const IntCompress& tc) {};
+        IntCompress(const IntCompress& tc) : _maxDeltaType{tc._maxDeltaType}, _seed{tc._seed}, _maxDelta{tc._maxDelta} {};
         virtual ~IntCompress() {};
 
         std::vector<int64_t> decompress() {

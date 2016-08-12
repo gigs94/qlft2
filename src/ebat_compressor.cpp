@@ -77,7 +77,7 @@ int main(int argc, char **argv)
            reptime.push_back(parser.longValue());
            price.push_back(parser.stringValue());
            size.push_back(parser.intValue());
-       } catch (std::overflow_error err) {
+       } catch (const std::overflow_error& err) {
            std::cerr << "Problem parsing the file.   Reached EOL before reading required fields" << std::endl;
            exit(1);
        }

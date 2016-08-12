@@ -68,7 +68,7 @@ class CsvParser {
         bool moveToNextLine() {
             try {
                 _line = _getLine(_infile);
-            } catch (std::overflow_error err) {
+            } catch (const std::overflow_error & err) {
                 return false;
             }
             return true;
