@@ -61,12 +61,12 @@ class StringCompress {
 
         friend std::ostream& operator<<( std::ostream& os, const StringCompress& tc ) {
             os << "dictionary:\n";
-            for ( auto x : tc._dict ) {
+            for ( auto&& x : tc._dict ) {
                 os << "   " << x.first << ":" << x.second << "\n";
             }
 
             os << "values:\n";
-            for ( auto y : tc._values ) {
+            for ( auto&& y : tc._values ) {
                 os << "   " << y << "\n";
             }
 

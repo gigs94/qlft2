@@ -30,8 +30,8 @@ class DeltaBlock {
             bool first{true};
             int64_t prev{0};
 
-            for ( auto block : _blocks ) {
-                auto a = block.decompress();
+            for ( auto&& block : _blocks ) {
+                auto&& a = block.decompress();
                 rtn.insert(std::end(rtn), std::begin(a), std::end(a));
             }
 
@@ -43,7 +43,7 @@ class DeltaBlock {
         };
 
         friend std::ostream& operator<<( std::ostream& os, const DeltaBlock& rhs ) {
-            for ( auto block : rhs._blocks ) {
+            for ( auto&& block : rhs._blocks ) {
                 os << block;
             }
             return os;
